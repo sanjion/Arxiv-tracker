@@ -4,6 +4,8 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/colorfulandcjy0806/Arxiv-tracker/digest.yml?label=Arxiv%20Digest&style=flat-square)](../../actions)
 [![Pages](https://img.shields.io/badge/GitHub%20Pages-online-2ea44f?style=flat-square)](https://colorfulandcjy0806.github.io/Arxiv-tracker/)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776ab?style=flat-square&logo=python)
+![Last Commit](https://img.shields.io/github/last-commit/colorfulandcjy0806/Arxiv-tracker?style=flat-square)
+![Open Issues](https://img.shields.io/github/issues/colorfulandcjy0806/Arxiv-tracker?style=flat-square)
 [![License: MIT](https://img.shields.io/badge/License-MIT-black.svg?style=flat-square)](./LICENSE)
 
 > **如果你喜欢本项目，欢迎点亮一个 ⭐ Star 获取最新进展！**
@@ -19,8 +21,15 @@
 - 🔗 **自动提取链接**：Abs / PDF / 代码仓库 / 项目页
 - 📨 **邮件推送**：内置 QQ 邮箱（SSL/465），支持多收件人
 - 🌐 **网页发布**：自动生成美观 HTML（GitHub Pages），历史归档与折叠/展开
-- 🛡️ **稳健可靠**：请求重试、幂等防重、`--no-email` 重试不发、并发保护
 - ⚙️ **易于扩展**：模块化代码，支持 GitHub Actions 与本地运行
+
+**网页效果如下图：**
+<img src="images/html.png" alt="Preview" width="720">
+
+---
+
+**邮件效果如下图：**
+<img src="images/email.png" alt="Preview" width="720">
 
 ---
 
@@ -49,14 +58,14 @@ requirements.txt      # 运行依赖
 
 **Secrets（机密）**
 
-- `DS_API_KEY`：LLM Key（如 DeepSeek）
+- `DS_API_KEY`：LLM Key（如 DeepSeek的API，sk-xxxxx）
 - `SMTP_PASS`：QQ 邮箱 **SMTP 授权码**（非登录密码）
 
 **Variables（非机密，可用 Secrets 替代）**
 
-- `EMAIL_TO`：收件人（多个用 `,` 或 `;` 分隔）
-- `EMAIL_SENDER`：发件人邮箱（通常与 SMTP 用户一致）
-- `SMTP_USER`：SMTP 用户名（通常 = 发件人邮箱）
+- `EMAIL_TO`：收件人（多个用 `,` 或 `;` 分隔，比如xxx@qq.com）
+- `EMAIL_SENDER`：发件人邮箱（通常与 SMTP 用户一致，比如xxx@qq.com）
+- `SMTP_USER`：SMTP 用户名（通常 = 发件人邮箱，比如xxx@qq.com）
 
 ### 3) 启用 GitHub Pages
 
@@ -162,29 +171,37 @@ python -m arxiv_tracker.cli run   --config config.yaml   --site-dir docs   --ver
 
 - **没收到邮件？** 检查 Actions 日志中的“Show email env (masked)”是否全部注入成功；确认 TLS/端口组合正确；QQ 开启 POP3/SMTP 并使用**授权码**。
 - **总结只有一句话？** 日志若显示 `[Run] summary   : heuristic/both`，说明 LLM 未启用或密钥未注入。确认 `summary.mode: llm` 且 `DS_API_KEY` 存在，且不要用 CLI 参数覆盖为 heuristic。
-- **收到两封邮件？** 确认未并发运行；我们已通过 `--no-email` + 幂等标记防重。
 
 ---
 
 ## 🗺️ Roadmap
 
+- [ ] 支持更多LLM，下一步考虑硅基流动的API
 - [ ] 更多站点主题（暗色、跟随系统）
 - [ ] 自定义卡片字段开关与顺序
-- [ ] 多 Job 并行订阅不同主题
-- [ ] 站点搜索/过滤
-- [ ] Slack / Telegram 推送
-- [ ] PDF 中代码链接自动汇总
 
-欢迎 PR 与 Issue！
+
+
+**欢迎 PR 与 Issue！**
 
 ---
 
 ## ✨ Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=colorfulandcjy0806/Arxiv-tracker.git&type=Date)](https://www.star-history.com/#colorfulandcjy0806/Arxiv-tracker.git&Date)
+[![Star History](https://api.star-history.com/svg?repos=colorfulandcjy0806/Arxiv-tracker&type=Date)](https://star-history.com/#colorfulandcjy0806/Arxiv-tracker&Date)
+
 
 ---
+
+## 🤝 Community contributors
+
+<a href="https://github.com/colorfulandcjy0806/Arxiv-tracker/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=colorfulandcjy0806/Arxiv-tracker" alt="Contributors"/>
+</a>
 
 ## 🔒 License
 
 本项目基于 **MIT 协议** 开源，详见 [LICENSE](./LICENSE)。
+
+
+帮我翻译成英文版本的readme 给我直接可以下载的
