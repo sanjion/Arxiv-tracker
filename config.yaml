@@ -11,8 +11,6 @@ keywords:
   - "training-free"
   - "zero-shot"
   - "test-time adaptation"
-  - "prompt tuning"
-  - "LoRA"
 
 logic: "OR"                 # 组间逻辑：categories 与 keywords 间 AND/OR
 max_results: 30
