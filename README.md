@@ -10,7 +10,7 @@
 
 > **如果你喜欢本项目，欢迎点亮一个 ⭐ Star 获取最新进展！**
 
-**[简体中文](./README_CN.md) | English**
+**简体中文| [English]](./README_EN.md) **
 
 ---
 
