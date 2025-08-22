@@ -202,6 +202,14 @@ python -m arxiv_tracker.cli run   --config config.yaml   --site-dir docs   --ver
 
 ---
 
+## 🤝 Community contributors
+
+<a href="https://github.com/colorfulandcjy0806/Arxiv-tracker/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=colorfulandcjy0806/Arxiv-tracker" alt="Contributors"/>
+</a>
+
+---
+
 ## 🔒 License
 
 Released under the **MIT License**. See [LICENSE](./LICENSE).
