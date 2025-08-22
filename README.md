@@ -202,6 +202,3 @@ python -m arxiv_tracker.cli run   --config config.yaml   --site-dir docs   --ver
 ## 🔒 License
 
 本项目基于 **MIT 协议** 开源，详见 [LICENSE](./LICENSE)。
-
-
-帮我翻译成英文版本的readme 给我直接可以下载的
