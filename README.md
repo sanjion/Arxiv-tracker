@@ -181,7 +181,7 @@ python -m arxiv_tracker.cli run   --config config.yaml   --site-dir docs   --ver
 
 ## ✨ Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=colorfulandcjy0806/Arxiv-tracker&type=Date)](https://star-history.com/#colorfulandcjy0806/Arxiv-tracker&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=colorfulandcjy0806/Arxiv-tracker.git&type=Date)](https://www.star-history.com/#colorfulandcjy0806/Arxiv-tracker.git&Date)
 
 ---
 
