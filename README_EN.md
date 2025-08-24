@@ -188,6 +188,8 @@ python -m arxiv_tracker.cli run   --config config.yaml   --site-dir docs   --ver
 
 ## 🗺️ Roadmap
 
+- [ ] Address the issue of retrieving the same literature every day
+- [ ] The bug that sends 2 emails every time
 - [ ] More LLM backends (OpenAI-compatible providers)
 - [ ] More site themes (dark, system)
 - [ ] Per-card field toggles & ordering
