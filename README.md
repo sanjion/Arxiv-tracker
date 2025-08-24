@@ -176,6 +176,8 @@ python -m arxiv_tracker.cli run   --config config.yaml   --site-dir docs   --ver
 
 ## 🗺️ Roadmap
 
+- [ ] 解决每天检索到的文献都一样的问题
+- [ ] 每次会发送2封邮件的bug
 - [ ] 支持更多LLM，下一步考虑硅基流动的API
 - [ ] 更多站点主题（暗色、跟随系统）
 - [ ] 自定义卡片字段开关与顺序
