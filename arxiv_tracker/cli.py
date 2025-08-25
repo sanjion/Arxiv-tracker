@@ -98,6 +98,7 @@ def cli():
 @click.option("--site-dir", default=None, help="输出静态站点目录（如 docs）")
 @click.option("--site-url", default=None, help="站点首页 URL（用于邮件正文链接）")
 @click.option("--no-email", is_flag=True, help="跳过邮件发送（用于重试）")
+
 def run(config_path, categories, keywords, logic, max_results, sort_by, sort_order,
         lang, summary_mode, summary_scope, email_enabled, email_detail, email_max_items,
         out_dir, verbose, translate_enabled, translate_lang, pdf_enabled, no_email: bool,
@@ -151,6 +152,16 @@ def run(config_path, categories, keywords, logic, max_results, sort_by, sort_ord
         email_cfg.setdefault("detail", "full")
         email_cfg.setdefault("max_items", 50)
 
+        # —— Freshness & 去重配置 —— #
+        fresh_cfg = (raw_cfg.get("freshness") or {})
+        since_days = int(fresh_cfg.get("since_days", 0) or 0)          # 近 N 天（0=不启用）
+        unique_only = bool(fresh_cfg.get("unique_only", False))        # 跨天去重
+        state_path = fresh_cfg.get("state_path", ".state/seen.json")   # 去重状态文件
+        fallback_when_empty = bool(fresh_cfg.get("fallback_when_empty", False))
+        if verbose:
+            click.echo("[Freshness] since_days={}, unique_only={}, state_path='{}', fallback_when_empty={}"
+                       .format(since_days, unique_only, state_path, fallback_when_empty))
+
         if verbose:
             click.echo("[Run] categories: {}".format(cfg.categories))
             click.echo("[Run] keywords  : {}".format(cfg.keywords))
@@ -162,18 +173,97 @@ def run(config_path, categories, keywords, logic, max_results, sort_by, sort_ord
                 email_cfg.get("enabled", False), email_cfg.get("detail"), email_cfg.get("max_items")
             ))
 
-        # 2) 查询
+        # 2) 查询（分页抓取直到攒够“未读新条目”或触达时间窗）
+        from datetime import datetime, timedelta, timezone
+        import json, pathlib
+
+        def _parse_dt(s: str):
+            if not s:
+                return None
+            s = s.replace("Z", "+00:00")
+            try:
+                return datetime.fromisoformat(s).astimezone(timezone.utc)
+            except Exception:
+                return None
+
         q = build_search_query(cfg.categories, cfg.keywords, cfg.logic)
         click.echo("[Query] {}".format(q))
-        xml = fetch_arxiv_feed(q, start=0, max_results=cfg.max_results,
-                               sort_by=cfg.sort_by, sort_order=cfg.sort_order)
-        items = parse_feed(xml)
+
+        # 读取已见集合（兼容 list / {"ids":[...]} / {id: timestamp} 三种格式）
+        seen_ids = set()
+        if unique_only and state_path:
+            try:
+                if os.path.exists(state_path):
+                    with open(state_path, "r", encoding="utf-8") as f:
+                        j = json.load(f) or {}
+                        if isinstance(j, dict) and "ids" in j:
+                            seen_ids = set(j.get("ids") or [])
+                        elif isinstance(j, dict):
+                            seen_ids = set(j.keys())
+                        elif isinstance(j, list):
+                            seen_ids = set(j)
+            except Exception:
+                seen_ids = set()
+
+        cutoff = datetime.now(timezone.utc) - timedelta(days=since_days) if since_days > 0 else None
+        want_new = int(cfg.max_results or 50)
+
+        # 分页参数（可按需改成配置）
+        page_size = min(200, max(25, want_new))  # 25~200 较稳
+        max_pages = 20
+        start = 0
+        collected, reached_cutoff = [], False
+
+        for _page in range(max_pages):
+            xml = fetch_arxiv_feed(
+                q, start=start, max_results=page_size,
+                sort_by=cfg.sort_by, sort_order=cfg.sort_order
+            )
+            page_items = parse_feed(xml) or []
+            if not page_items:
+                break
+
+            for it in page_items:
+                # 时间窗（按 updated 优先；无则退回 published）
+                t = _parse_dt(it.get("updated")) or _parse_dt(it.get("published"))
+                if cutoff and t and t < cutoff:
+                    reached_cutoff = True
+                    break
+
+                # 去重
+                aid = it.get("id")
+                if unique_only and aid and aid in seen_ids:
+                    continue
+
+                collected.append(it)
+                if len(collected) >= want_new:
+                    break
+
+            if len(collected) >= want_new or reached_cutoff:
+                break
+
+            if len(page_items) < page_size:
+                # 已无更多可翻页内容
+                break
+
+            start += page_size
+
+        # Fallback：若空且允许回退，则给最新一页（不考虑去重/时间窗）
+        if not collected and fallback_when_empty:
+            xml = fetch_arxiv_feed(
+                q, start=0, max_results=want_new,
+                sort_by=cfg.sort_by, sort_order=cfg.sort_order
+            )
+            collected = parse_feed(xml) or []
+
+        items = collected
         if not items:
-            click.secho("[Info] No results.（检索条件可能太窄；仍将生成空文件/可发空 digest）", fg="yellow")
+            click.secho("[Info] No new items after pagination/freshness/dedup filter.", fg="yellow")
+        else:
+            click.echo(f"[Info] Fetched {len(items)} new item(s) after pagination/dedup.")
 
         # 3) 摘要
         summaries_zh, summaries_en = {}, {}
-
         def _sum_for_lang(L):
             out = {}
             for it in items:
@@ -189,7 +279,8 @@ def run(config_path, categories, keywords, logic, max_results, sort_by, sort_ord
         # 4) 翻译（中文）
         translations = {}
         if trans_cfg.get("enabled") and (trans_cfg.get("lang", "zh") == "zh"):
-            api_key = (llm_cfg.get("api_key") or os.getenv(llm_cfg.get("api_key_env") or "OPENAI_API_KEY", ""))
+            api_key = (llm_cfg.get("api_key")
+                       or os.getenv(llm_cfg.get("api_key_env") or "OPENAI_API_KEY", ""))
             if not api_key:
                 click.secho("[Translate] 跳过：未找到 LLM API Key（配置 llm.api_key 或设置环境变量 {}）"
                             .format(llm_cfg.get("api_key_env") or "OPENAI_API_KEY"), fg="yellow")
@@ -208,6 +299,8 @@ def run(config_path, categories, keywords, logic, max_results, sort_by, sort_ord
                         click.secho(f"[Translate] 失败 {sid[:18]}...: {e}", fg="red")
 
         # 5) 终端预览
+        if not items:
+            click.echo("（今日暂无新增）")
         for idx, it in enumerate(items, 1):
             title = it.get("title", "")
             venue = it.get("venue_inferred") or (it.get("journal_ref") or "")
@@ -228,14 +321,14 @@ def run(config_path, categories, keywords, logic, max_results, sort_by, sort_ord
 
         # 6) 保存到文件 + 生成 PDF（可选）
         json_path = save_json(items, out_dir)
-        md_path = save_markdown(items, out_dir, summaries_zh, summaries_en, lang=lang, translations=translations)
+        md_path   = save_markdown(items, out_dir, summaries_zh, summaries_en, lang=lang, translations=translations)
         click.echo(f"Saved: {json_path}")
         click.echo(f"Saved: {md_path}")
 
         # 6.5) 生成站点（如启用）
         page_url = None
+        site_generated = False
         try:
-            # 优先 CLI，其次 config.yaml
             from .sitegen import generate_site
             site_cfg = (raw_cfg.get("site") or {}) if 'raw_cfg' in locals() else {}
             sd = site_dir or site_cfg.get("dir")
@@ -256,6 +349,7 @@ def run(config_path, categories, keywords, logic, max_results, sort_by, sort_ord
                 page_url = site_url or site_cfg.get("url")
                 if page_url and not page_url.endswith("/"):
                     page_url += "/"
+                site_generated = True
         except Exception as e:
             click.secho(f"[Site] 生成失败: {e}", fg="red")
 
@@ -268,6 +362,7 @@ def run(config_path, categories, keywords, logic, max_results, sort_by, sort_ord
                 click.secho(f"[PDF] 生成失败: {e}", fg="red")
 
         # 7) 邮件发送（富模板 + 附件 [md] + 顶部“Web 版”）
+        email_sent = False
         if email_cfg.get("enabled"):
             try:
                 # 进程级防重（本进程只发一次）
@@ -277,7 +372,14 @@ def run(config_path, categories, keywords, logic, max_results, sort_by, sort_ord
                     email_cfg["enabled"] = False
 
                 # 快照级防重（同一个快照只发一次）
-                stamp = _extract_stamp_from_path(json_path)
+                def _fallback_stamp(p: str) -> str:
+                    b = os.path.basename(p or "")
+                    return os.path.splitext(b)[0]
+                try:
+                    stamp = _extract_stamp_from_path(json_path)
+                except Exception:
+                    stamp = _fallback_stamp(json_path)
+
                 flag_dir = pathlib.Path(out_dir or "outputs")
                 flag_dir.mkdir(parents=True, exist_ok=True)
                 flag_path = flag_dir / f"email_sent_{stamp}.flag"
@@ -286,28 +388,34 @@ def run(config_path, categories, keywords, logic, max_results, sort_by, sort_ord
                     email_cfg["enabled"] = False
 
                 if email_cfg.get("enabled"):
-                    # 1) 环境变量优先（适合 GitHub Actions：Secrets/Variables）
+                    # 环境变量优先（适合 GitHub Actions）
                     env_to = os.getenv("EMAIL_TO", "")
                     to_list = [x.strip() for x in re.split(r"[;,]", env_to) if x.strip()] if env_to else (email_cfg.get("to") or [])
-
                     sender_env = os.getenv("EMAIL_SENDER", "")
                     sender = sender_env or (email_cfg.get("sender") or "")
-
-                    server = email_cfg.get("smtp_server") or "smtp.qq.com"
-                    port = int(email_cfg.get("smtp_port") or 465)
-                    user_env = os.getenv("SMTP_USER", "")
-                    user = user_env or (email_cfg.get("smtp_user") or sender)
-
-                    pass_env = email_cfg.get("smtp_pass_env") or "SMTP_PASS"
-                    passwd = os.getenv(pass_env, "")
-
+                    server  = email_cfg.get("smtp_server") or "smtp.qq.com"
+                    port    = int(email_cfg.get("smtp_port") or 465)
+                    user_env= os.getenv("SMTP_USER", "")
+                    user    = user_env or (email_cfg.get("smtp_user") or sender)
+                    pass_env= email_cfg.get("smtp_pass_env") or "SMTP_PASS"
+                    passwd  = os.getenv(pass_env, "")
                     subject = email_cfg.get("subject") or "[arXiv] Digest"
-                    tls_mode = email_cfg.get("tls", "auto")
-                    debug = bool(email_cfg.get("debug", False))
-                    detail = email_cfg.get("detail", "full")
+                    tls_mode= email_cfg.get("tls", "auto")
+                    debug   = bool(email_cfg.get("debug", False))
+                    detail  = email_cfg.get("detail", "full")
                     max_items = int(email_cfg.get("max_items", 50))
 
-                    # 收件人去重与清洗
+                    # 收件人去重
+                    try:
+                        _ = _dedup_addrs
+                    except NameError:
+                        def _dedup_addrs(lst):
+                            s, out = set(), []
+                            for a in lst or []:
+                                a2 = a.lower()
+                                if a2 not in s:
+                                    s.add(a2); out.append(a)
+                            return out
                     to_list = _dedup_addrs(to_list)
 
                     if not (to_list and sender and passwd):
@@ -316,12 +424,15 @@ def run(config_path, categories, keywords, logic, max_results, sort_by, sort_ord
                         html_body = ""
                         if page_url:
                             html_body += f'<div style="margin-bottom:10px">Web 版：<a href="{page_url}">{page_url}</a></div>'
-                        html_body += render_email_html(
-                            items=items, lang=lang, translations=translations,
-                            summaries_zh=summaries_zh, summaries_en=summaries_en,
-                            detail=detail, max_items=max_items,
-                            title=subject.replace("[arXiv]", "arXiv")
-                        )
+                        if not items:
+                            html_body += "<p>今日暂无新增命中。</p>"
+                        else:
+                            html_body += render_email_html(
+                                items=items, lang=lang, translations=translations,
+                                summaries_zh=summaries_zh, summaries_en=summaries_en,
+                                detail=detail, max_items=max_items,
+                                title=subject.replace("[arXiv]", "arXiv")
+                            )
                         from .mailer import send_email
                         attach = []
                         if email_cfg.get("attach_md", False) and md_path:
@@ -333,16 +444,33 @@ def run(config_path, categories, keywords, logic, max_results, sort_by, sort_ord
                             smtp_server=server, smtp_port=port, smtp_user=user, smtp_pass=passwd,
                             tls_mode=tls_mode, attachments=attach, debug=debug, timeout=20
                         )
-                        # 成功后设置防重标记
                         _SENT_EMAIL = True
+                        email_sent = True
                         try:
                             flag_path.touch()
                         except Exception:
                             pass
                         click.echo("[Email] 已发送")
-
             except Exception as e:
                 click.secho("[Email] 发送失败: {}".format(e), fg="red")
+
+        # 8) —— 仅在“网页生成成功或邮件成功发送”后，才持久化去重状态 —— #
+        try:
+            if unique_only and state_path and items and (site_generated or email_sent):
+                all_seen = set(seen_ids)
+                for it in items:
+                    aid = it.get("id")
+                    if aid:
+                        all_seen.add(aid)
+                p = pathlib.Path(state_path)
+                p.parent.mkdir(parents=True, exist_ok=True)
+                with open(p, "w", encoding="utf-8") as f:
+                    json.dump({"ids": sorted(all_seen)}, f, ensure_ascii=False, indent=2)
+                click.echo(f"[Freshness] 更新去重状态，共 {len(all_seen)} 条 -> {state_path}")
+            elif unique_only and items:
+                click.echo("[Freshness] 未写入去重状态（本次既未成功发邮件也未生成站点）")
+        except Exception as e:
+            click.secho(f"[Freshness] 保存去重状态失败: {e}", fg="yellow")
 
         if verbose:
             click.echo("[Run] Done")
@@ -351,7 +479,6 @@ def run(config_path, categories, keywords, logic, max_results, sort_by, sort_ord
         click.secho("[Run] ERROR: {}".format(e), fg="red")
         traceback.print_exc()
         sys.exit(1)
-
 
 if __name__ == "__main__":
     cli()

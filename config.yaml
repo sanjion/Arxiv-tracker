@@ -1,20 +1,22 @@
 # 多学科 + 多主题示例
-categories: ["cs.CV", "cs.LG", "cs.CL"]
+categories: ["cs.CV", "cs.LG", "cs.AI"]
 keywords:
+  - "open vocabulary"
+  - "open-vocabulary"
   - "open vocabulary segmentation"
-  - "referring segmentation"
-  - "vision-language segmentation"
+  - "open-vocabulary segmentation"
   - "vision language model"
+  - "vision-language grounding"
   - "VLM"
-  - "visual instruction tuning"
-  - "vision-language alignment"
+  - "MLLM"
   - "training-free"
-  - "zero-shot"
-  - "test-time adaptation"
+  - "training free"
+  - "multimodal benchmark"
+  - "vision-language segmentation"
 
-logic: "OR"                 # 组间逻辑：categories 与 keywords 间 AND/OR
+logic: "AND"                 # 组间逻辑：categories 与 keywords 间 AND/OR
 max_results: 30
-sort_by: "submittedDate"     # 或 lastUpdatedDate
+sort_by: "lastUpdatedDate"  # ← submittedDate 建议改成lastUpdatedDate按更新时间排，能捞到v2/v3的“新增”
 sort_order: "descending"
 
 # —— 新增：语言设置 ——
@@ -35,19 +37,26 @@ email:
   smtp_server: "smtp.qq.com"
   smtp_port: 465
   smtp_pass_env: "SMTP_PASS"
-  tls: "auto"  # auto / ssl / starttls
+  tls: "ssl"  # auto / ssl / starttls
   debug: false     # true 可打印 SMTP 调试日志（排障）
   detail: "full"  # simple / full
-  max_items: 20
-  attach_md: ture  # 是否开启Markdown附件
+  max_items: 30
+  attach_md: true  # 是否开启Markdown附件
   attach_pdf: false  # 是否开启PDF附件
 
 # —— 新增：LLM（DeepSeek/OpenAI 兼容） ——
 llm:
   provider: "openai-compatible"     # 兼容 OpenAI SDK 的服务
-  base_url: "https://api.deepseek.com"
-  model: "deepseek-chat"
-  api_key_env: "DS_API_KEY"
+  # 硅基流动的版本
+  base_url: "https://api.siliconflow.cn"
+  model: "Qwen/Qwen2.5-7B-Instruct"
+  api_key_env: "OPENAI_COMPAT_API_KEY"
+  # Deepseek的版本
+  # base_url: "https://api.deepseek.com"
+  # model: "deepseek-chat"
+  # api_key_env: "DS_API_KEY"
+  
+
   system_prompt_en: |
     You are a senior paper-reading assistant. Based on the given metadata and abstract,
     write ONE concise paragraph in English that covers: research motivation, main method,
@@ -57,6 +66,7 @@ llm:
     你是资深论文阅读助手。基于给定的论文元信息与摘要，用中文写「一段」简洁的总结，
     包含研究动机、核心方法与关键实验结果。保持客观、术语准确；避免营销式表述。
     如有链接请保留，但不要在总结里重复链接。
+
 # —— 新增：中文翻译设置（用 LLM 翻译 title/summary） ——
 translate:
   enabled: true         # 是否启用
@@ -70,3 +80,9 @@ site:
   keep_runs: 1024         # 历史保留期（按页面份数）
   theme: "light"        # "light" | "dark" | "auto"
   accent: "#2563eb"     # 主题色（可自定义）
+
+freshness:
+  since_days: 3650           # 只看最近 N 天内新提交/更新（1=近24h）
+  unique_only: true       # 开启跨天去重（见过的 arXiv ID 不再重复发）
+  state_path: ".state/seen.json"  # 去重状态文件（会随 docs 一起提交保存）
+  fallback_when_empty: false # 当今天无新增时，是否回退展示最近的Top若干（建议false）

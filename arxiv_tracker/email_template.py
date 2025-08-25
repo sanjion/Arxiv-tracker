@@ -122,6 +122,7 @@ def render_email_html(
       <h2 style="margin:8px 0 12px 0;">{_esc(title)}</h2>
       <style>{CSS}</style>
     """
+
     if not items:
         return head + "<p>No results.</p></div>"
 
