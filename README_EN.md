@@ -1,56 +1,58 @@
-# Arxiv-tracker · arXiv Daily Paper Tracker
+# Arxiv-tracker · Daily arXiv Paper Tracker
 
 [![Stars](https://img.shields.io/github/stars/colorfulandcjy0806/Arxiv-tracker?style=flat-square)](https://github.com/colorfulandcjy0806/Arxiv-tracker/stargazers)
-[![CI](https://img.shields.io/github/actions/workflow/status/colorfulandcjy0806/Arxiv-tracker/digest.yml?label=Arxiv%20Digest&style=flat-square)](https://github.com/colorfulandcjy0806/Arxiv-tracker/actions)
+[![CI](https://img.shields.io/github/actions/workflow/status/colorfulandcjy0806/Arxiv-tracker/digest.yml?label=Arxiv%20Digest&style=flat-square)](../../actions)
 [![Pages](https://img.shields.io/badge/GitHub%20Pages-online-2ea44f?style=flat-square)](https://colorfulandcjy0806.github.io/Arxiv-tracker/)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776ab?style=flat-square&logo=python)
 ![Last Commit](https://img.shields.io/github/last-commit/colorfulandcjy0806/Arxiv-tracker?style=flat-square)
 ![Open Issues](https://img.shields.io/github/issues/colorfulandcjy0806/Arxiv-tracker?style=flat-square)
 [![License: MIT](https://img.shields.io/badge/License-MIT-black.svg?style=flat-square)](./LICENSE)
 
-> If you like this project, please give it a **⭐ Star** to get the latest updates!
+> **If you like this project, please give it a ⭐ star for the latest updates!**  
 
-**[简体中文](./README.md) | English**
+**[简体中文](./README_CN.md) | English **
 
 ---
 
 ## 😮 Highlights
 
-- 🔎 **Multi-field & multi-topic search**: supports categories like `cs.CV / cs.LG / cs.CL`, with keyword combinations using AND/OR.
-- 🧠 **LLM bilingual summary**: **one English paragraph + one Chinese paragraph**, covering motivation / method / key results.
-- 🔗 **Automatic link extraction**: Abs / PDF / code repos / project pages (venue inferred from comments/journal_ref if available).
-- 📨 **Email delivery**: built-in QQ Mail (SSL/465), supports multiple recipients.
-- 🌐 **Web publishing**: auto-generated HTML via GitHub Pages, with archive & collapsible sections.
-- ⚙️ **Extensible**: modular codebase; supports GitHub Actions and local runs.
+- 🔎 **Multi-field, multi-topic search**: categories like `cs.CV / cs.LG / cs.AI / cs.CL`; free-form keywords; `logic: AND/OR` controls the relation between the *category-set* and the *keyword-set*
+- 🧠 **Bilingual LLM summaries**: one English + one Chinese paragraph, or **two-stage** (TL;DR + Method Card + Discussion)
+- 🔗 **Auto links**: abstract / PDF / code repo / project page
+- 📨 **Email delivery**: QQ SMTP (465/SSL or 587/STARTTLS), multi-recipient
+- 🌐 **Web page (GitHub Pages)**: nice HTML site with archive & collapse/expand
+- ♻️ **Freshness + Dedup**: only push papers that are *fresh* and *not sent before*; write `seen.json` **after successful output** to keep idempotency
+- 📦 **OpenAI-Compatible LLM**: **DeepSeek / SiliconFlow** supported via the same config (one `base_url` + one `api_key`)
+- 🔁 **Auto pagination**: avoid always taking the same first N results
 
-**Web preview:**
+**Preview (web):**  
+<img src="images/html.png" alt="Preview" width="720">
 
-<p align="center">
-  <img src="images/html.png" alt="Web Preview" width="720">
-</p>
-
-
-
----
-
-**Email preview:**
-
-<p align="center">
-  <img src="images/email.png" alt="Email Preview" width="720">
-</p>
-
-
+**Preview (email):**  
+<img src="images/email.png" alt="Preview" width="720">
 
 ---
 
-## 🧭 Repository Structure
+## 📰 News
+
+- **2025-08-25**
+  - Added **Freshness + persistent dedup** (write to `seen.json` only after a successful output).
+  - Added **OpenAI-Compatible LLM**: besides DeepSeek, now works with **SiliconFlow** (e.g., `Qwen/Qwen3-8B`).
+  - Fixed a bug that **could send duplicate emails**; added Actions **concurrency guard** and a **manual-send toggle**.
+  - Introduced **auto pagination** to avoid reusing the same batch.
+- **2025-08-22**: First public release (search → summarize/translate → email/web).
+
+---
+
+## 🧭 Repository Layout
 
 ```
-arxiv_tracker/        # Core logic (client, parser, summarizer, site generator, mailer, etc.)
+arxiv_tracker/        # Core logic (client, parser, summarizer, site, mailer)
 docs/                 # GitHub Pages output (auto-generated)
-outputs/              # JSON/MD snapshots per run (optional)
-.github/workflows/    # digest.yml schedule (03:00 Beijing time daily)
-config.yaml           # Search/summary/email/site configuration
+outputs/              # Per-run JSON/MD (auto-generated)
+.state/               # Dedup state (seen.json, recommend committing it)
+.github/workflows/    # digest.yml (daily 03:00 Beijing time)
+config.yaml           # Search / summary / email / site / dedup config
 requirements.txt      # Dependencies
 ```
 
@@ -58,145 +60,237 @@ requirements.txt      # Dependencies
 
 ## 🚀 Quick Start (Fork & Deploy)
 
-### 1) Fork this repository
+### 1) Fork
 
-Click **Fork** (top-right) to create your copy.
+Click **Fork** on the top-right.
 
 ### 2) Configure Secrets & Variables
 
 > Settings → **Secrets and variables** → **Actions**
 
-**Secrets (confidential)**
+**Secrets**
 
-- `DS_API_KEY`: LLM key (e.g., DeepSeek API, `sk-xxxxx`)
-- `SMTP_PASS`: QQ Mail **SMTP authorization code** (NOT the login password)
+- `OPENAI_COMPAT_API_KEY`: API key for any OpenAI-compatible provider (e.g., **DeepSeek**, **SiliconFlow**)
+- `SMTP_PASS`: QQ **SMTP App Password** (not your login password)
 
-**Variables (non-confidential; you may also use Secrets)**
+**Variables**
 
-- `EMAIL_TO`: recipients (`,` or `;` separated, e.g., `a@qq.com;b@xx.com`)
-- `EMAIL_SENDER`: sender address (usually same as SMTP user, e.g., `a@qq.com`)
-- `SMTP_USER`: SMTP username (usually equals sender)
-
-> ⚠️ **Never commit API keys or SMTP codes to the repo.** Keep them in **Actions → Secrets** only.
+- `EMAIL_TO`: Recipients (comma/semicolon separated)
+- `EMAIL_SENDER`: Sender email (usually equals SMTP user)
+- `SMTP_USER`: SMTP username (usually the same as sender)
 
 ### 3) Enable GitHub Pages
 
-Settings → **Pages**: Source = **Deploy from a branch**; Branch = `main`, Folder = `/docs`.
+Settings → **Pages** → Source: **Deploy from a branch**; Branch `main`, Folder `/docs`.
 
-### 4) Trigger the workflow
+### 4) Workflow (manual toggle to send email)
 
-`.github/workflows/digest.yml` runs **daily at 03:00 Beijing time**. You can also run it manually in **Actions → Run workflow**.
+Example `digest.yml` (excerpt):
+
+```yaml
+name: arxiv-digest
+
+on:
+  workflow_dispatch:
+    inputs:
+      send_email:
+        description: "Send email for manual run?"
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
+  schedule:
+    - cron: "0 19 * * *"  # 19:00 UTC = 03:00 Beijing next day
+
+concurrency:
+  group: arxiv-digest
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.10" }
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Compute Pages URL
+        id: site
+        run: |
+          REPO="${GITHUB_REPOSITORY}"
+          OWNER="${REPO%%/*}"
+          NAME="${REPO#*/}"
+          echo "url=https://${OWNER}.github.io/${NAME}/" >> $GITHUB_OUTPUT
+
+      - name: Run tracker (schedule-only email unless forced)
+        env:
+          OPENAI_COMPAT_API_KEY: ${{ secrets.OPENAI_COMPAT_API_KEY }}
+          EMAIL_TO:     ${{ secrets.EMAIL_TO   || vars.EMAIL_TO }}
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER || vars.EMAIL_SENDER }}
+          SMTP_USER:    ${{ secrets.SMTP_USER  || vars.SMTP_USER }}
+          SMTP_PASS:    ${{ secrets.SMTP_PASS }}
+        run: |
+          set -e
+          EXTRA="--no-email"
+          if { [ "${{ github.event_name }}" = "schedule" ] && [ "${{ github.run_attempt }}" = "1" ]; } || \
+             { [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.send_email }}" = "true" ]; }; then
+            EXTRA=""
+          fi
+          python -m arxiv_tracker.cli run \
+            --config config.yaml \
+            --site-dir docs \
+            --site-url "${{ steps.site.outputs.url }}" \
+            $EXTRA \
+            --verbose
+
+      - name: Commit outputs
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update digest & site"
+          file_pattern: |
+            docs/**
+            outputs/**
+            .state/**
+```
+
+> **Note**: include `.state/**` in `file_pattern` to persist dedup state across runs.
 
 ---
 
 ## ⚙️ Configuration (`config.yaml`)
 
 ```yaml
-categories: ["cs.CV", "cs.LG", "cs.CL"]
+# === Search ===
+categories: ["cs.CV", "cs.LG", "cs.AI"]
 keywords:
   - "open vocabulary segmentation"
-  - "referring segmentation"
-  - "vision-language segmentation"
-logic: "AND"
-max_results: 10
-sort_by: "submittedDate"
+  - "vision-language grounding"
+logic: "AND"                 # categories (OR) combined with keywords (OR) by AND/OR
+max_results: 100             # per-page cap; the runner auto-paginates internally
+sort_by: "lastUpdatedDate"   # or submittedDate
 sort_order: "descending"
 
-lang: "both"            # Generate English + Chinese summary
+# === Output language ===
+lang: "both"                 # zh / en / both
 
+# === Summaries ===
 summary:
-  mode: "llm"           # Use LLM
-  scope: "both"
+  mode: "llm"                # none / heuristic / llm
+  scope: "both"              # tldr / full / both
 
+# === LLM (OpenAI-Compatible: DeepSeek / SiliconFlow) ===
+llm:
+  base_url: "https://api.deepseek.com"     # or "https://api.siliconflow.cn"
+  model: "deepseek-chat"                   # e.g., "Qwen/Qwen3-8B" for SiliconFlow
+  api_key_env: "OPENAI_COMPAT_API_KEY"
+  system_prompt_en: |
+    You are a senior paper-reading assistant...
+  system_prompt_zh: |
+    你是资深论文阅读助手...
+
+# === Optional: CN translation for title/abstract ===
 translate:
   enabled: true
   lang: "zh"
   fields: ["title", "summary"]
 
-llm:
-  base_url: "https://api.deepseek.com"
-  model: "deepseek-chat"
-  api_key_env: "DS_API_KEY"
-
+# === Email (QQ SMTP example) ===
 email:
   enabled: true
+  subject: "[arXiv] Daily Digest"
   smtp_server: "smtp.qq.com"
   smtp_port: 465
-  tls: "ssl"
+  tls: "ssl"                 # auto / ssl / starttls
   debug: false
   detail: "full"
-  max_items: 20
-  attach_md: false
+  max_items: 10
+  attach_md: true
   attach_pdf: false
 
+# === Site (GitHub Pages) ===
 site:
   enabled: true
   dir: "docs"
-  title: "arXiv Daily Digest"
+  title: "arXiv Daily"
   keep_runs: 1024
   theme: "light"
   accent: "#2563eb"
+
+# === Freshness & Dedup (write after success) ===
+freshness:
+  since_days: 3
+  unique_only: true
+  state_path: ".state/seen.json"
+  fallback_when_empty: false
 ```
 
-> The workflow passes `--site-url` automatically, so you don’t need to hardcode the Pages URL in `config.yaml`.
+> **Query semantics**: within `categories` we OR; within `keywords` we OR; then join the two sets with `logic` (AND/OR). Example: `logic: AND` means *in these categories* **and** *match these keywords*.
 
 ---
 
-## 🛠️ Run Locally (optional)
+## 🛠️ Run Locally (macOS/Linux)
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 
-export DS_API_KEY="your-LLM-key"
+export OPENAI_COMPAT_API_KEY="your_api_key"
+# base_url/model are in config.yaml
 export EMAIL_TO="your@qq.com"
 export EMAIL_SENDER="your@qq.com"
 export SMTP_USER="your@qq.com"
-export SMTP_PASS="your-qq-smtp-auth-code"
+export SMTP_PASS="your_qq_smtp_app_password"
 
-python -m arxiv_tracker.cli run   --config config.yaml   --site-dir docs   --verbose
+python -m arxiv_tracker.cli run --config config.yaml --site-dir docs --verbose
 ```
 
----
+### Windows (PowerShell)
 
-## 📨 Email & De-duplication
+```powershell
+python -m venv .venv; .\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 
-- SMTP: `smtp.qq.com:465 + SSL` (or `587 + STARTTLS`)
-- Multiple recipients: separate with `,` or `;`
-- De-dup:
-  - Workflow retries: only the **first attempt** sends email (`--no-email` for subsequent attempts)
-  - CLI: idempotency guard to avoid duplicate sends for the same snapshot
+$Env:OPENAI_COMPAT_API_KEY = "your_api_key"
+$Env:EMAIL_TO     = "your@qq.com"
+$Env:EMAIL_SENDER = "your@qq.com"
+$Env:SMTP_USER    = "your@qq.com"
+$Env:SMTP_PASS    = "your_qq_smtp_app_password"
 
----
-
-## 🧩 Site Features
-
-- Light theme, responsive layout
-- Cards: title, authors, timestamps (first/latest), comments/venue, links (Abs/PDF/Code/Project)
-- **Summary**: **one English paragraph + one Chinese paragraph** (LLM output)
-- Collapsible Abstract and CN title/summary; home shows latest digest with archives
+python -m arxiv_tracker.cli run --config config.yaml --site-dir docs --verbose
+```
 
 ---
 
 ## ❓ FAQ
 
-- **No email received?** Check “Show email env (masked)” in Actions logs for injected variables; verify TLS/port; ensure QQ Mail SMTP/POP3 enabled and use the **authorization code**.
-- **Summary looks like only the first sentence?** If logs show `[Run] summary   : heuristic/both`, LLM wasn’t enabled or API key missing. Ensure `summary.mode: llm` and `DS_API_KEY` exists; don’t override with CLI flags forcing heuristic.
-
+- **Results look stale / empty?**  
+  Auto pagination + freshness filter + post-success dedup are enabled. If a day is empty, try temporarily increasing `since_days` to 2–3; also check if your keywords are too narrow.
+- **401 Unauthorized (SiliconFlow/DeepSeek)**  
+  Ensure `OPENAI_COMPAT_API_KEY` is a valid key for the provider you configured.
+- **ReadTimeout (arXiv API)**  
+  Likely network hiccups; just retry later.
+- **No email received**  
+  Check “Show email env (masked)” in Actions logs; ensure QQ SMTP app password is used and TLS/port matches your settings.
+  
 ---
 
-## 🗺️ Roadmap
+##  🗺️  To-do list
 
-- [ ] Address the issue of retrieving the same literature every day
-- [ ] The bug that sends 2 emails every time
-- [ ] More LLM backends (OpenAI-compatible providers)
-- [ ] More site themes (dark, system)
-- [ ] Per-card field toggles & ordering
-
-**PRs and Issues are welcome!**
-
----
+- [x] Solve the problem of retrieving the same literature every day
+- [x] Bug of sending 2 emails each time
+- [x] Support more LLMs, next step to consider silicon-based flow APIs
+- [ ] More site themes (dark color, following system)
+- [ ] Custom card field switch and order
 
 ## ✨ Star History
 
@@ -207,11 +301,9 @@ python -m arxiv_tracker.cli run   --config config.yaml   --site-dir docs   --ver
 ## 🤝 Community contributors
 
 <a href="https://github.com/colorfulandcjy0806/Arxiv-tracker/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=colorfulandcjy0806/Arxiv-tracker" alt="Contributors"/>
+  <img src="https://contrib.rocks/image?repo=colorfulandcjy0806/Arxiv-tracker" alt="Contributors" width="720"/>
 </a>
-
----
 
 ## 🔒 License
 
-Released under the **MIT License**. See [LICENSE](./LICENSE).
+MIT — see [LICENSE](./LICENSE).

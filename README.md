@@ -8,39 +8,51 @@
 ![Open Issues](https://img.shields.io/github/issues/colorfulandcjy0806/Arxiv-tracker?style=flat-square)
 [![License: MIT](https://img.shields.io/badge/License-MIT-black.svg?style=flat-square)](./LICENSE)
 
-> **如果你喜欢本项目，欢迎点亮一个 ⭐ Star 获取最新进展！**
+> **如果你喜欢本项目，欢迎点亮一个 ⭐ Star 获取最新进展！**  
 
-**简体中文** | [English](./README_EN.md) 
+**简体中文 | [English](./README_EN.md) **
 
 ---
 
 ## 😮 项目亮点（Highlights）
 
-- 🔎 **多学科多主题检索**：支持 `cs.CV / cs.LG / cs.CL` 等分类，任意关键词 AND/OR 组合
-- 🧠 **LLM 双语总结**：**英文一段 + 中文一段**，覆盖动机 / 方法 / 主要实验结果
+- 🔎 **多学科多主题检索**：支持 `cs.CV / cs.LG / cs.AI / cs.CL` 等分类，自由组合关键词；`logic: AND/OR` 控制“分类集合”与“关键词集合”的布尔关系
+- 🧠 **LLM 双语总结**：**英文一段 + 中文一段** 或两阶段摘要（TL;DR + Method Card + Discussion）
 - 🔗 **自动提取链接**：Abs / PDF / 代码仓库 / 项目页
-- 📨 **邮件推送**：内置 QQ 邮箱（SSL/465），支持多收件人
-- 🌐 **网页发布**：自动生成美观 HTML（GitHub Pages），历史归档与折叠/展开
-- ⚙️ **易于扩展**：模块化代码，支持 GitHub Actions 与本地运行
+- 📨 **邮件推送**：QQ SMTP（465/SSL 或 587/STARTTLS），支持多收件人
+- 🌐 **网页发布（GitHub Pages）**：自动生成美观 HTML，历史归档与折叠/展开
+- ♻️ **去重 + 新鲜度**：仅推送“近 N 天 & 未发送过”的论文；支持**成功后再写入**的幂等防重
+- 📦 **OpenAI-Compatible LLM**：**DeepSeek / SiliconFlow 等统一配置**（一个 `base_url` + 一个 `api_key` 即可）
+- 🔁 **自动分页抓取**：避免每次只拿同一批前 N 条导致结果“用尽”
 
-**网页效果如下图：**
+**网页效果如下图：**  
 <img src="images/html.png" alt="Preview" width="720">
+
+**邮件效果如下图：**  
+<img src="images/email.png" alt="Preview" width="720">
 
 ---
 
-**邮件效果如下图：**
-<img src="images/email.png" alt="Preview" width="720">
+## 📰 News
+
+- **2025-08-25**
+  - 新增 **Freshness + 去重持久化**（且仅在**成功输出**后写入 `seen.json`）。
+  - 新增 **OpenAI-Compatible LLM**：除 DeepSeek 外，已验证可直连 **SiliconFlow** 免费/付费模型（示例：`Qwen/Qwen3-8B`）。
+  - 修复“**可能重复发邮件**”的问题；补充 Actions **并发防重**与“**手动触发选择是否发信**”。
+  - 新增 **自动分页抓取**，避免总是命中同一批条目。
+- **2025-08-22**：完成初版（检索 → 摘要/翻译 → 邮件/网页）。
 
 ---
 
 ## 🧭 仓库结构
 
 ```
-arxiv_tracker/        # 核心逻辑（客户端、解析、总结、站点、邮件等）
+arxiv_tracker/        # 核心逻辑（客户端、解析、摘要、站点、邮件等）
 docs/                 # GitHub Pages 站点输出（自动生成）
-outputs/              # 每次运行保存的 JSON/MD 等（可选）
+outputs/              # 每次运行保存的 JSON/MD（自动生成）
+.state/               # 去重状态（seen.json，建议随仓库提交）
 .github/workflows/    # digest.yml 定时任务（每日 03:00 北京时间）
-config.yaml           # 检索/摘要/邮件/站点配置
+config.yaml           # 检索/摘要/邮件/站点/去重 配置
 requirements.txt      # 运行依赖
 ```
 
@@ -58,65 +70,154 @@ requirements.txt      # 运行依赖
 
 **Secrets（机密）**
 
-- `DS_API_KEY`：LLM Key（如 DeepSeek的API，sk-xxxxx）
+- `OPENAI_COMPAT_API_KEY`：任意 OpenAI 兼容平台的 API Key（如 **DeepSeek**、**SiliconFlow**）  
 - `SMTP_PASS`：QQ 邮箱 **SMTP 授权码**（非登录密码）
 
 **Variables（非机密，可用 Secrets 替代）**
 
-- `EMAIL_TO`：收件人（多个用 `,` 或 `;` 分隔，比如xxx@qq.com）
-- `EMAIL_SENDER`：发件人邮箱（通常与 SMTP 用户一致，比如xxx@qq.com）
-- `SMTP_USER`：SMTP 用户名（通常 = 发件人邮箱，比如xxx@qq.com）
+- `EMAIL_TO`：收件人（多个用 `,` 或 `;` 分隔，比如 `a@qq.com,b@xx.com`）
+- `EMAIL_SENDER`：发件人邮箱（通常与 SMTP 用户一致，比如 `xxx@qq.com`）
+- `SMTP_USER`：SMTP 用户名（通常 = 发件人邮箱，比如 `xxx@qq.com`）
 
 ### 3) 启用 GitHub Pages
 
 Settings → **Pages**：Source 选 **Deploy from a branch**；Branch 选 `main`，Folder 选 `/docs`。
 
-### 4) 触发工作流
+### 4) 配置并运行工作流（支持手动触发是否发信）
 
-`.github/workflows/digest.yml` 已配置**每日北京时间 03:00**自动运行。也可在 **Actions** 中手动 **Run workflow**。
+`.github/workflows/digest.yml` 示例（节选）：
+
+```yaml
+name: arxiv-digest
+
+on:
+  workflow_dispatch:
+    inputs:
+      send_email:
+        description: "Send email for manual run?"
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
+  schedule:
+    - cron: "0 19 * * *"  # 每天 19:00 UTC = 北京时间次日 03:00
+
+concurrency:
+  group: arxiv-digest
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.10" }
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Compute Pages URL
+        id: site
+        run: |
+          REPO="${GITHUB_REPOSITORY}"
+          OWNER="${REPO%%/*}"
+          NAME="${REPO#*/}"
+          echo "url=https://${OWNER}.github.io/${NAME}/" >> $GITHUB_OUTPUT
+
+      - name: Run tracker (schedule-only email unless forced)
+        env:
+          OPENAI_COMPAT_API_KEY: ${{ secrets.OPENAI_COMPAT_API_KEY }}
+          EMAIL_TO:     ${{ secrets.EMAIL_TO   || vars.EMAIL_TO }}
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER || vars.EMAIL_SENDER }}
+          SMTP_USER:    ${{ secrets.SMTP_USER  || vars.SMTP_USER }}
+          SMTP_PASS:    ${{ secrets.SMTP_PASS }}
+        run: |
+          set -e
+          EXTRA="--no-email"
+          if { [ "${{ github.event_name }}" = "schedule" ] && [ "${{ github.run_attempt }}" = "1" ]; } || \
+             { [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.send_email }}" = "true" ]; }; then
+            EXTRA=""
+          fi
+          python -m arxiv_tracker.cli run \
+            --config config.yaml \
+            --site-dir docs \
+            --site-url "${{ steps.site.outputs.url }}" \
+            $EXTRA \
+            --verbose
+
+      - name: Commit outputs
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update digest & site"
+          file_pattern: |
+            docs/**
+            outputs/**
+            .state/**
+```
+
+> **要点**：`file_pattern` 里包含 `.state/**`，这样去重状态会随运行持久化到仓库，防止重复推送。
 
 ---
 
 ## ⚙️ 配置说明（`config.yaml`）
 
+> 下面示例演示最常用的字段。完整示例请参考仓库中的 `config.yaml`。
+
 ```yaml
-categories: ["cs.CV", "cs.LG", "cs.CL"]
+# === 检索 ===
+categories: ["cs.CV", "cs.LG", "cs.AI"]
 keywords:
   - "open vocabulary segmentation"
-  - "referring segmentation"
-  - "vision-language segmentation"
-logic: "AND"
-max_results: 10
-sort_by: "submittedDate"
+  - "vision-language grounding"
+logic: "AND"                 # 左：分类集合 (OR)；右：关键词集合 (OR)；二者再 AND/OR
+max_results: 100             # 每页抓取上限（内部支持自动分页累计）
+sort_by: "lastUpdatedDate"   # 或 submittedDate
 sort_order: "descending"
 
-lang: "both"            # 生成英文+中文两段“总结”
+# === 输出语言 ===
+lang: "both"                 # zh / en / both
 
+# === 摘要生成 ===
 summary:
-  mode: "llm"           # 使用 LLM 生成总结
-  scope: "both"
+  mode: "llm"                # none / heuristic / llm
+  scope: "both"              # tldr / full / both
 
+# === LLM（OpenAI-Compatible，DeepSeek / SiliconFlow 均可） ===
+llm:
+  base_url: "https://api.deepseek.com"     # 或 "https://api.siliconflow.cn"
+  model: "deepseek-chat"                   # 例：SiliconFlow 可用 "Qwen/Qwen3-8B"
+  api_key_env: "OPENAI_COMPAT_API_KEY"     # 统一密钥环境变量
+  system_prompt_en: |
+    You are a senior paper-reading assistant...
+  system_prompt_zh: |
+    你是资深论文阅读助手...
+
+# === 可选：题目/摘要中文翻译 ===
 translate:
   enabled: true
   lang: "zh"
   fields: ["title", "summary"]
 
-llm:
-  base_url: "https://api.deepseek.com"
-  model: "deepseek-chat"
-  api_key_env: "DS_API_KEY"
-
+# === 邮件发送（QQ 邮箱示例） ===
 email:
   enabled: true
+  subject: "[arXiv] Daily Digest"
   smtp_server: "smtp.qq.com"
   smtp_port: 465
-  tls: "ssl"
+  tls: "ssl"                 # auto / ssl / starttls
   debug: false
-  detail: "full"
-  max_items: 20
-  attach_md: false
+  detail: "full"             # simple / full
+  max_items: 10
+  attach_md: true
   attach_pdf: false
 
+# === 站点（GitHub Pages） ===
 site:
   enabled: true
   dir: "docs"
@@ -124,81 +225,84 @@ site:
   keep_runs: 1024
   theme: "light"
   accent: "#2563eb"
+
+# === 新鲜度 & 去重（成功后落盘） ===
+freshness:
+  since_days: 3               # 近 N 天（若偶尔为空，可暂时改 2~3）
+  unique_only: true           # 开启跨天去重
+  state_path: ".state/seen.json"
+  fallback_when_empty: false  # 当当天无新增时是否回退展示最近 top 若干
 ```
 
-> 工作流会把 `--site-url` 自动传入，不必在 `config.yaml` 写死站点 URL。
+> **搜索逻辑**：`categories` 内部按 OR 合并；`keywords` 内部按 OR 合并；二者之间由 `logic` 决定 AND/OR。比如 `logic: AND` 表示“**属于这些学科** 且 **匹配这些关键词**”。
 
 ---
 
-## 🛠️ 本地运行（可选）
+## 🛠️ 本地运行（macOS/Linux）
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 
-export DS_API_KEY="你的LLM密钥"
+export OPENAI_COMPAT_API_KEY="你的密钥"
+# base_url/模型在 config.yaml 里配置
 export EMAIL_TO="your@qq.com"
 export EMAIL_SENDER="your@qq.com"
 export SMTP_USER="your@qq.com"
 export SMTP_PASS="你的QQ SMTP授权码"
 
-python -m arxiv_tracker.cli run   --config config.yaml   --site-dir docs   --verbose
+python -m arxiv_tracker.cli run --config config.yaml --site-dir docs --verbose
 ```
 
----
+### Windows（PowerShell）
 
-## 📨 邮件与防重复
+```powershell
+python -m venv .venv; .\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 
-- SMTP：`smtp.qq.com:465 + SSL`（或 `587 + STARTTLS`）
-- 多收件人：`,` 或 `;` 分隔
-- 防重复策略：
-  - Workflow 重试仅**首轮**发送（后续传 `--no-email`）
-  - 代码中有**幂等标记**（同一快照只发一次）
+$Env:OPENAI_COMPAT_API_KEY = "你的密钥"
+$Env:EMAIL_TO     = "your@qq.com"
+$Env:EMAIL_SENDER = "your@qq.com"
+$Env:SMTP_USER    = "your@qq.com"
+$Env:SMTP_PASS    = "你的QQ SMTP授权码"
 
----
-
-## 🧩 页面特性
-
-- 亮色主题，响应式布局
-- 卡片信息：标题、作者、时间、Comments/会议、链接区（Abs/PDF/Code/Project）
-- **Summary / 总结**：**英文一段 + 中文一段**（LLM 输出）
-- Abstract 与中文标题/摘要为折叠块；首页支持历史归档
+python -m arxiv_tracker.cli run --config config.yaml --site-dir docs --verbose
+```
 
 ---
 
 ## ❓ 常见问题（FAQ）
 
-- **没收到邮件？** 检查 Actions 日志中的“Show email env (masked)”是否全部注入成功；确认 TLS/端口组合正确；QQ 开启 POP3/SMTP 并使用**授权码**。
-- **总结只有一句话？** 日志若显示 `[Run] summary   : heuristic/both`，说明 LLM 未启用或密钥未注入。确认 `summary.mode: llm` 且 `DS_API_KEY` 存在，且不要用 CLI 参数覆盖为 heuristic。
+- **检索结果总是相同/逐渐变少？**  
+  已启用**自动分页** + **新鲜度过滤** + **成功后落盘去重**。若当天为空，可将 `since_days` 临时改为 2~3 并观察；或检查关键词是否过窄。
+- **401 Unauthorized（SiliconFlow/DeepSeek）**  
+  请确保 `OPENAI_COMPAT_API_KEY` 填写的是真实可用的 API Key；SiliconFlow 的 Bearer 直接放 Key 即可。
+- **ReadTimeout（arXiv API）**  
+  可能是网络波动，可重试；或稍后再试。
+- **邮件没收到？**  
+  检查 Actions 日志“Show email env (masked)”是否注入完整；QQ 开启 SMTP 并使用**授权码**；必要时切换 465/SSL 与 587/STARTTLS。
 
 ---
 
-## 🗺️ Roadmap
-
-- [ ] 解决每天检索到的文献都一样的问题
-- [ ] 每次会发送2封邮件的bug
-- [ ] 支持更多LLM，下一步考虑硅基流动的API
-- [ ] 更多站点主题（暗色、跟随系统）
-- [ ] 自定义卡片字段开关与顺序
-
-
-
-**欢迎 PR 与 Issue！**
-
----
+## 🗺️ 待办清单
+- [x] 解决每天检索到的文献都一样的问题
+- [x] 每次会发送2封邮件的bug 
+- [x] 支持更多LLM，下一步考虑硅基流动的API 
+- [ ] 更多站点主题（暗色、跟随系统） 
+- [ ] 自定义卡片字段开关与顺序 
 
 ## ✨ Star History
 
 [![Star History](https://api.star-history.com/svg?repos=colorfulandcjy0806/Arxiv-tracker&type=Date)](https://star-history.com/#colorfulandcjy0806/Arxiv-tracker&Date)
-
 
 ---
 
 ## 🤝 Community contributors
 
 <a href="https://github.com/colorfulandcjy0806/Arxiv-tracker/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=colorfulandcjy0806/Arxiv-tracker" alt="Contributors"/>
+  <img src="https://contrib.rocks/image?repo=colorfulandcjy0806/Arxiv-tracker" alt="Contributors" width="720"/>
 </a>
 
 ## 🔒 License
