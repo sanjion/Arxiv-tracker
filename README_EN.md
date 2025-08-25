@@ -161,6 +161,10 @@ jobs:
             .state/**
 ```
 
+**Configuration process is as follows:**
+
+<img src="images/guide.png" alt="Preview" width="720">
+
 > **Note**: include `.state/**` in `file_pattern` to persist dedup state across runs.
 
 ---
