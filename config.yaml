@@ -6,13 +6,8 @@ keywords:
   - "open vocabulary segmentation"
   - "open-vocabulary segmentation"
   - "vision language model"
-  - "vision-language grounding"
-  - "VLM"
-  - "MLLM"
   - "training-free"
   - "training free"
-  - "multimodal benchmark"
-  - "vision-language segmentation"
 
 logic: "AND"                 # 组间逻辑：categories 与 keywords 间 AND/OR
 max_results: 30
