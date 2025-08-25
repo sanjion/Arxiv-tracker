@@ -161,6 +161,10 @@ jobs:
             .state/**
 ```
 
+**配置流程如下：**  
+<img src="images/guide.png" alt="Preview" width="720">
+
+
 > **要点**：`file_pattern` 里包含 `.state/**`，这样去重状态会随运行持久化到仓库，防止重复推送。
 
 ---
