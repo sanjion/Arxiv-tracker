@@ -83,7 +83,7 @@ Click **Fork** on the top-right.
 
 Settings → **Pages** → Source: **Deploy from a branch**; Branch `main`, Folder `/docs`.
 
-### 4) Workflow (manual toggle to send email)
+### 4) Workflow (Support manual triggering of whether to send a message. The code has already written it, so this step can be omitted and run directly)
 
 Example `digest.yml` (excerpt):
 
