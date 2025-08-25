@@ -1,4 +1,3 @@
-# 多学科 + 多主题示例
 categories: ["cs.CV", "cs.LG", "cs.AI"]
 keywords:
   - "open vocabulary"
@@ -11,21 +10,20 @@ keywords:
 
 logic: "AND"                 # 组间逻辑：categories 与 keywords 间 AND/OR
 max_results: 30
-sort_by: "lastUpdatedDate"  # ← submittedDate 建议改成lastUpdatedDate按更新时间排，能捞到v2/v3的“新增”
+sort_by: "lastUpdatedDate"  # 还可以是submittedDate 建议改成lastUpdatedDate按更新时间排，能捞到v2/v3的“新增”
 sort_order: "descending"
 
-# —— 新增：语言设置 ——
 # zh / en / both
 lang: "both"
 
-# —— 新增：摘要设置 ——
+# —— 摘要设置 ——
 # mode: none / heuristic / llm
 summary:
   mode: llm # mode: "heuristic"
   # scope: tldr / full / both
   scope: "both"
 
-# —— 新增：邮件发送（QQ 邮箱示例） ——
+# —— 邮件发送（QQ 邮箱） ——
 email:
   enabled: true
   subject: "[arXiv] Daily Digest"
@@ -33,13 +31,13 @@ email:
   smtp_port: 465
   smtp_pass_env: "SMTP_PASS"
   tls: "ssl"  # auto / ssl / starttls
-  debug: false     # true 可打印 SMTP 调试日志（排障）
+  debug: false     # true 可打印 SMTP 调试日志
   detail: "full"  # simple / full
   max_items: 30
   attach_md: true  # 是否开启Markdown附件
   attach_pdf: false  # 是否开启PDF附件
 
-# —— 新增：LLM（DeepSeek/OpenAI 兼容） ——
+# —— LLM（DeepSeek/OpenAI 兼容） ——
 llm:
   provider: "openai-compatible"     # 兼容 OpenAI SDK 的服务
   # 硅基流动的版本
@@ -62,7 +60,7 @@ llm:
     包含研究动机、核心方法与关键实验结果。保持客观、术语准确；避免营销式表述。
     如有链接请保留，但不要在总结里重复链接。
 
-# —— 新增：中文翻译设置（用 LLM 翻译 title/summary） ——
+# —— 中文翻译设置（用 LLM 翻译 title/summary） ——
 translate:
   enabled: true         # 是否启用
   lang: "zh"            # 目前只需中文；也可扩展 en/ja 等
@@ -70,7 +68,7 @@ translate:
 
 site:
   enabled: true
-  dir: "docs" # GitHub Pages 推荐用 docs 目录
+  dir: "docs" 
   title: "arXiv 论文速递"
   keep_runs: 1024         # 历史保留期（按页面份数）
   theme: "light"        # "light" | "dark" | "auto"
