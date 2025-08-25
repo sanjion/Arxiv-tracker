@@ -83,7 +83,7 @@ requirements.txt      # 运行依赖
 
 Settings → **Pages**：Source 选 **Deploy from a branch**；Branch 选 `main`，Folder 选 `/docs`。
 
-### 4) 配置并运行工作流（支持手动触发是否发信）
+### 4) 配置并运行工作流（支持手动触发是否发信，仓库已经写好，这步可以省略，直接运行就行）
 
 `.github/workflows/digest.yml` 示例（节选）：
 
