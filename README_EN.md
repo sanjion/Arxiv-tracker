@@ -10,7 +10,7 @@
 
 > **If you like this project, please give it a ⭐ star for the latest updates!**  
 
-**[简体中文](./README_CN.md) | English **
+**[简体中文](./README_CN.md) | English**
 
 ---
 
