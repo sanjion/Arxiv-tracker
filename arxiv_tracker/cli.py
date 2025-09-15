@@ -262,6 +262,33 @@ def run(config_path, categories, keywords, logic, max_results, sort_by, sort_ord
         else:
             click.echo(f"[Info] Fetched {len(items)} new item(s) after pagination/dedup.")
 
+        # 先从已有文本/HTML提取；若仍没有再扫 PDF 头部兜底
+        scrape_cfg = (raw_cfg.get("scrape") or {})
+        scrape_html = bool(scrape_cfg.get("html", True))
+        scrape_pdf_if_missing = bool(scrape_cfg.get("pdf_if_missing", True))
+        scrape_pdf_always = bool(scrape_cfg.get("pdf_first_page", False))
+        scrape_to = int(scrape_cfg.get("timeout", 10))
+
+        from .extrascrape import augment_item_links
+
+        if verbose:
+            click.echo(f"[Scrape] html={scrape_html} pdf_if_missing={scrape_pdf_if_missing} "
+                       f"pdf_first_page={scrape_pdf_always} timeout={scrape_to}")
+
+        for it in items:
+            try:
+                added = augment_item_links(
+                    it,
+                    html=scrape_html,
+                    pdf_if_missing=scrape_pdf_if_missing,
+                    pdf_first_page=scrape_pdf_always,
+                    timeout=scrape_to,
+                )
+                if verbose and added > 0:
+                    click.echo(f"[Scrape] +{added} code link(s) for {(it.get('id') or '')[:32]}")
+            except Exception as e:
+                click.secho(f"[Scrape] 补链失败 {(it.get('id') or '')[:18]}...: {e}", fg="yellow")
+
         # 3) 摘要
         summaries_zh, summaries_en = {}, {}
         def _sum_for_lang(L):
