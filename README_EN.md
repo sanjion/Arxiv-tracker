@@ -41,6 +41,7 @@
   - Fixed a bug that **could send duplicate emails**; added Actions **concurrency guard** and a **manual-send toggle**.
   - Introduced **auto pagination** to avoid reusing the same batch.
 - **2025-08-22**: First public release (search → summarize/translate → email/web).
+- **2025-09-15**: Add code link completion. First, crawl the GitHub/Code link from the comments/summary/arXiv page; If it is still missing, you can scan the PDF homepage to try to identify the link and alleviate the problem of "incomplete display of GitHub code".
 
 ---
 
@@ -293,6 +294,7 @@ python -m arxiv_tracker.cli run --config config.yaml --site-dir docs --verbose
 - [x] Solve the problem of retrieving the same literature every day
 - [x] Bug of sending 2 emails each time
 - [x] Support more LLMs, next step to consider silicon-based flow APIs
+- [x] Code link completion (when missing, grab the PDF homepage as a backup)
 - [ ] More site themes (dark color, following system)
 - [ ] Custom card field switch and order
 
