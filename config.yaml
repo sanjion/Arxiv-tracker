@@ -79,3 +79,9 @@ freshness:
   unique_only: true       # 开启跨天去重（见过的 arXiv ID 不再重复发）
   state_path: ".state/seen.json"  # 去重状态文件（会随 docs 一起提交保存）
   fallback_when_empty: false # 当今天无新增时，是否回退展示最近的Top若干（建议false）
+
+scrape:
+  html: true               # 先用 HTML 页抓链接
+  pdf_if_missing: true     # 若没抓到 code，再去扫 PDF 头部兜底
+  pdf_first_page: false    # （可保留为 false；若你想“不管有没有都扫 PDF”，设 true）
+  timeout: 10
