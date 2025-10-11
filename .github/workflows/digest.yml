@@ -40,17 +40,19 @@ jobs:
       - name: Install system dependencies for Cairo
         run: |
           sudo apt-get update
-          # 原有依赖保留，并补充常见图形/字体依赖，避免 pycairo/rlpycairo/src 构建失败
+          # 运行库 + 开发头 + 绑定 + 常见图形依赖 + pkg-config
           sudo apt-get install -y \
-            libcairo2-dev \
+            libcairo2 \                # 运行时库（确保 runtime 存在）
+            libcairo2-dev \            # 开发头 & cairo.pc
+            python3-cairo \            # 直接提供 Py 绑定，避免 pip 构建 pycairo
             libpango1.0-dev \
             libgdk-pixbuf2.0-dev \
             libffi-dev \
-            libjpeg-dev \        # [新增]
-            libpng-dev \         # [新增]
-            libfreetype6-dev \   # [新增]
-            pkg-config           # [新增]
-
+            libjpeg-dev \
+            libpng-dev \
+            libfreetype6-dev \
+            pkg-config
+            
       # [新增] 预装构建工具，避免在构建 pycairo 时临时下载安装
       - name: Prep build tools
         run: |
