@@ -2,7 +2,7 @@ name: arxiv-daily
 
 on:
   schedule:
-    - cron: "0 1 * * *" 
+    - cron: "0 1 * * *"   # 每天 01:00 UTC 运行（新加坡时间约 09:00）
   workflow_dispatch: {}
 
 jobs:
@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -19,9 +20,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            libcairo2 \               
-            libcairo2-dev \          
-            python3-cairo \            
+            libcairo2 \
+            libcairo2-dev \
+            python3-cairo \
             libpango1.0-dev \
             libgdk-pixbuf2.0-dev \
             libffi-dev \
