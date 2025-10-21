@@ -61,7 +61,7 @@ llm:
   provider: "openai-compatible"     # 兼容 OpenAI SDK 的服务
   # 硅基流动的版本
   base_url: "https://api.siliconflow.cn"
-  model: "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B"
+  model: "Qwen/Qwen2.5-7B-Instruct"
   api_key_env: "OPENAI_COMPAT_API_KEY"
   # Deepseek的版本
   # base_url: "https://api.deepseek.com"
