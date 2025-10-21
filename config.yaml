@@ -1,12 +1,74 @@
 categories: ["cs.CV", "cs.LG", "cs.AI"]
 keywords:
-  - "open vocabulary"
-  - "open-vocabulary"
-  - "open vocabulary segmentation"
-  - "open-vocabulary segmentation"
-  - "vision language model"
-  - "training-free"
-  - "training free"
+  # --- 1. 多模态大模型 (LMM) ---
+  # 涵盖 LMM, MLLM, 视觉语言模型等
+  - "Multimodal Large Model"
+  - "Large Multimodal Model"
+  - "LMM"
+  - "MLLM"
+  - "Multimodal Foundation Model"
+  - "Large Vision-Language Model"
+  - "Vision-Language Model"       # 保留您原有的
+  - "Vision Language Model"
+  - "Vision and Language"
+  - "Language and Vision"
+  - "Multi-modal"                # 带连字符
+  - "Multimodal"                 # 不带连字符
+
+  # --- 2. 视觉大模型 (LVM) ---
+  - "Large Vision Model"
+  - "Vision Foundation Model"
+  - "Large-scale Vision Model"
+
+  # --- 3. 视频理解与分割 (Video) ---
+  - "Video Understanding"
+  - "Video Recognition"
+  - "Video Segmentation"
+  - "Video Object Segmentation"  # VOS
+  - "Video Instance Segmentation" # VIS
+  - "Video Semantic Segmentation"
+  - "Action Recognition"
+  - "Action Detection"
+  - "Video Captioning"
+  - "Video Question Answering"
+  - "VideoQA"
+
+  # --- 4. 3D / 4D / 空间理解 (Spatial) ---
+  - "3D Understanding"
+  - "3D Scene Understanding"
+  - "3D Foundation Model"
+  - "Large Model for 3D"
+  - "3D Generation"
+  - "3D Segmentation"
+  - "4D Understanding"
+  - "4D Reconstruction"
+  - "Dynamic Scene"              # 动态场景，常用于4D
+  - "Spatial-Temporal"           # 时空
+  - "Spatial Intelligence"
+  - "Spatial Understanding"
+  - "Spatial Reasoning"
+  - "Geometric Reasoning"
+  - "NeRF"                       # 4D/3D的常见技术
+  - "Neural Radiance Fields"
+
+  # --- 5. 强化学习 & 具身智能 (RL / Embodied) ---
+  # 结合视觉的RL
+  - "Reinforcement Learning"
+  - "Vision-based Reinforcement Learning"
+  - "Embodied AI"
+  - "Embodied Agent"
+  - "Decision Making"
+
+  # --- 6. 测评集 (Benchmark) ---
+  # 结合 categories (cs.CV, cs.AI) 和 logic: "AND" 会很准
+  - "Benchmark"
+  - "Multimodal Benchmark"
+  - "Large Multimodal Model Benchmark"
+  - "LMM Benchmark"
+  - "Video Benchmark"
+  - "3D Benchmark"
+  - "Evaluation of Large Models"
+  - "Evaluating Large Models"
 
 logic: "AND"                 # 组间逻辑：categories 与 keywords 间 AND/OR
 max_results: 30
@@ -42,7 +104,7 @@ llm:
   provider: "openai-compatible"     # 兼容 OpenAI SDK 的服务
   # 硅基流动的版本
   base_url: "https://api.siliconflow.cn"
-  model: "Qwen/Qwen2.5-7B-Instruct"
+  model: "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B"
   api_key_env: "OPENAI_COMPAT_API_KEY"
   # Deepseek的版本
   # base_url: "https://api.deepseek.com"
