@@ -3,32 +3,35 @@ keywords:
   # --- 1. 多模态 (LMM) ---
   # LMM 和 MLLM 基本是同义词，Vision-Language Model 涵盖性强
   - "LMM"
-  - "Vision-Language Model"
+  - "MLLM"
+  - "VLM"
+  - "VLA"
 
   # --- 2. 视频 (Video) ---
-  # 这两个词涵盖了您的大部分需求 (分割, 识别, QA等)
+  # 这两个词涵盖了您的大部分需求
+  - "Video"
   - "Video Understanding"
-  - "Video Segmentation"
 
   # --- 3. 3D / 4D / 空间 (Spatial) ---
-  # 3D/4D 理解是高位词，NeRF 是特定且热门的技术
-  - "3D Understanding"
-  - "4D Understanding"
+  # 3D/4D 理解是高位词
+  - "4D"
+  - "3D"
+  - "Spatial"
+  - "Dynamic"
   - "Spatial-Temporal"
-  - "NeRF"
 
   # --- 4. 强化学习 / 具身智能 (RL / Embodied) ---
   # 'AND cs.CV' 会自动帮您筛选出视觉相关的RL
   - "Reinforcement Learning"
-  - "Embodied AI"
+  - "RL"
 
   # --- 5. 测评集 (Benchmark) ---
   # LMM Benchmark 足够具体
-  - "LMM Benchmark"
-  - "Multimodal Benchmark"
+  - "Benchmark"
+  - "Bench"
 
 logic: "AND"                 # 组间逻辑：categories 与 keywords 间 AND/OR
-max_results: 30
+max_results: 40
 sort_by: "lastUpdatedDate"  # 还可以是submittedDate 建议改成lastUpdatedDate按更新时间排，能捞到v2/v3的“新增”
 sort_order: "descending"
 
