@@ -289,27 +289,3 @@ python -m arxiv_tracker.cli run --config config.yaml --site-dir docs --verbose
   
 ---
 
-##  🗺️  To-do list
-
-- [x] Solve the problem of retrieving the same literature every day
-- [x] Bug of sending 2 emails each time
-- [x] Support more LLMs, next step to consider silicon-based flow APIs
-- [x] Code link completion (when missing, grab the PDF homepage as a backup)
-- [ ] More site themes (dark color, following system)
-- [ ] Custom card field switch and order
-
-## ✨ Star History
-
-[![Star History](https://api.star-history.com/svg?repos=colorfulandcjy0806/Arxiv-tracker&type=Date)](https://star-history.com/#colorfulandcjy0806/Arxiv-tracker&Date)
-
----
-
-## 🤝 Community contributors
-
-<a href="https://github.com/colorfulandcjy0806/Arxiv-tracker/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=colorfulandcjy0806/Arxiv-tracker" alt="Contributors" width="720"/>
-</a>
-
-## 🔒 License
-
-MIT — see [LICENSE](./LICENSE).
