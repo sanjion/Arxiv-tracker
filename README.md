@@ -290,26 +290,3 @@ python -m arxiv_tracker.cli run --config config.yaml --site-dir docs --verbose
 
 ---
 
-## 🗺️ 待办清单
-- [x] 解决每天检索到的文献都一样的问题
-- [x] 每次会发送2封邮件的bug
-- [x] 代码链接补全（缺失时抓取 PDF 首页作为兜底）
-- [x] 支持更多LLM，下一步考虑硅基流动的API 
-- [ ] 更多站点主题（暗色、跟随系统） 
-- [ ] 自定义卡片字段开关与顺序 
-
-## ✨ Star History
-
-[![Star History](https://api.star-history.com/svg?repos=colorfulandcjy0806/Arxiv-tracker&type=Date)](https://star-history.com/#colorfulandcjy0806/Arxiv-tracker&Date)
-
----
-
-## 🤝 Community contributors
-
-<a href="https://github.com/colorfulandcjy0806/Arxiv-tracker/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=colorfulandcjy0806/Arxiv-tracker" alt="Contributors" width="720"/>
-</a>
-
-## 🔒 License
-
-本项目基于 **MIT 协议** 开源，详见 [LICENSE](./LICENSE)。
